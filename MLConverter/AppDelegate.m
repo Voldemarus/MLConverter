@@ -6,6 +6,7 @@
 //
 
 #import "AppDelegate.h"
+#import "SourceFilesExtractor.h"
 
 @interface AppDelegate ()
 
@@ -17,7 +18,9 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    // Insert code here to initialize your application
+    SourceFilesExtractor *processor = [[SourceFilesExtractor alloc] init];
+    [processor processFiles];
+
 }
 
 

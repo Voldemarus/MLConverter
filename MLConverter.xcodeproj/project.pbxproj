@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B92BEE327AA9C7C009A31BB /* SourceFilesExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B92BEE227AA9C7C009A31BB /* SourceFilesExtractor.m */; };
 		1BA4004027A9686500607DC8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BA4003F27A9686500607DC8 /* AppDelegate.m */; };
 		1BA4004327A9686500607DC8 /* MLConverter.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1BA4004127A9686500607DC8 /* MLConverter.xcdatamodeld */; };
 		1BA4004527A9687700607DC8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1BA4004427A9687700607DC8 /* Assets.xcassets */; };
@@ -34,6 +35,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1B92BEE027AA9C0D009A31BB /* FilePointer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePointer.h; sourceTree = "<group>"; };
+		1B92BEE127AA9C7C009A31BB /* SourceFilesExtractor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SourceFilesExtractor.h; sourceTree = "<group>"; };
+		1B92BEE227AA9C7C009A31BB /* SourceFilesExtractor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceFilesExtractor.m; sourceTree = "<group>"; };
 		1BA4003B27A9686500607DC8 /* MLConverter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MLConverter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BA4003E27A9686500607DC8 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		1BA4003F27A9686500607DC8 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -99,6 +103,7 @@
 		1BA4003D27A9686500607DC8 /* MLConverter */ = {
 			isa = PBXGroup;
 			children = (
+				1BA4007127A9688400607DC8 /* SourceData */,
 				1BA4003E27A9686500607DC8 /* AppDelegate.h */,
 				1BA4003F27A9686500607DC8 /* AppDelegate.m */,
 				1BA4004427A9687700607DC8 /* Assets.xcassets */,
@@ -127,6 +132,16 @@
 				1BA4006227A9687800607DC8 /* Info.plist */,
 			);
 			path = MLConverterUITests;
+			sourceTree = "<group>";
+		};
+		1BA4007127A9688400607DC8 /* SourceData */ = {
+			isa = PBXGroup;
+			children = (
+				1B92BEE027AA9C0D009A31BB /* FilePointer.h */,
+				1B92BEE127AA9C7C009A31BB /* SourceFilesExtractor.h */,
+				1B92BEE227AA9C7C009A31BB /* SourceFilesExtractor.m */,
+			);
+			path = SourceData;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -258,6 +273,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1BA4004027A9686500607DC8 /* AppDelegate.m in Sources */,
+				1B92BEE327AA9C7C009A31BB /* SourceFilesExtractor.m in Sources */,
 				1BA4004B27A9687800607DC8 /* main.m in Sources */,
 				1BA4004327A9686500607DC8 /* MLConverter.xcdatamodeld in Sources */,
 			);
