@@ -66,17 +66,16 @@
             }
             NSInteger duplicateCounter = 0;
             for (NSInteger k = 0; k < images.count; k++) {
-                NSString *imName = images[i];
+                NSString *imName = images[k];
                 NSArray *comps = [imName componentsSeparatedByString:@"-"];
-                if (comps.count > 1) {
-                    NSString *prefix = comps[0];
-                    if (imNames[prefix]) {
-                        NSLog(@">>>>>   image %@ just found! Old - %@ New -%@",
-                              prefix, imNames[prefix], imName );
-                        duplicateCounter++;
-                    } else {
-                        imNames[prefix] = imName;
-                    }
+                NSString *fullImagePath = [imageDir stringByAppendingPathComponent:imName];
+                NSString *prefix = comps[0];
+                if (imNames[prefix]) {
+                   NSLog(@">>>>>   image %@ just found! Old - %@ New -%@",
+                        prefix, imNames[prefix], imName );
+                  duplicateCounter++;
+                } else {
+                   imNames[prefix] = fullImagePath;
                 }
             }
             NSLog(@"### Duplicates found - %ld", (long)duplicateCounter);
@@ -90,27 +89,22 @@
                     // Now we should check for presense of such image file
                     if (imNames[fNamePrefix]) {
                         // YES, we have such image!
-                        NSString *data = [[NSString alloc] initWithContentsOfFile:labelFiles[k] encoding:NSUTF8StringEncoding error:&error];
+                        NSString *labelFile = [labelDir stringByAppendingPathComponent:labelFiles[k]];
+                        NSString *data = [[NSString alloc] initWithContentsOfFile:labelFile encoding:NSUTF8StringEncoding error:&error];
                         if (error) {
-                            NSLog(@"#### Cannot read label file - %@",labelFiles[k]);
+                            NSLog(@"#### Cannot read label file - %@ --> %@",labelFiles[k], [error localizedDescription]);
                             labelReadError++;
                         } else {
                             // Parse data. Extract rectangle parameters.
-                            NSScanner *scanner = [NSScanner scannerWithString:data];
-                            NSCharacterSet *numbers = [NSCharacterSet characterSetWithCharactersInString:@".0123456789"];
-
-                            // Throw away characters before the first number.
-                            [scanner scanUpToCharactersFromSet:numbers intoString:NULL];
-
-                            // Collect numbers.
-                            float nums[20];
-                            BOOL found = [scanner scanFloat:nums];
-                            if (found) {
+                            NSArray <NSString *> *comps = [data componentsSeparatedByString:@" "];
+                            if (comps.count > 4) {
+                                CGRect coords = CGRectMake(comps[1].doubleValue, comps[2].doubleValue,
+                                                           comps[3].doubleValue, comps[4].doubleValue);
                                 // this coords are presented in relative values
-                                CGRect coords = CGRectMake(nums[1], nums[2], nums[3], nums[4]);
                                 // But Create ML requires absolute coordinates, so we need to get
                                 // actual image size and convert them
-                                NSImage *image = [[NSImage alloc] initWithContentsOfFile:imNames[fNamePrefix]];
+                                NSString *imageName = imNames[fNamePrefix];
+                                NSImage *image = [[NSImage alloc] initWithContentsOfFile:imageName];
                                 if (image) {
                                     double width = image.size.width;
                                     double height = image.size.height;
@@ -152,56 +146,89 @@
                                     BOOL testZone = [self decideArea:(uint32_t)labelFiles.count];
                                     if (testZone) {
                                         // update test directory
-                                        [self.learningArrray addObject:d];
-                                        [self copyImage:imNames[fNamePrefix] to:@"train"
-                                             withTarget:self.objectNames[i]];
+                                        if ([self copyImage:imNames[fNamePrefix] to:@"train"
+                                                 withTarget:self.objectNames[i]]) {
+                                            [self.learningArrray addObject:d];
+                                        }
                                     } else {
                                         // update train directory
-                                        [self.testingArray addObject:d];
-                                        [self copyImage:imNames[fNamePrefix] to:@"test"
-                                             withTarget:self.objectNames[i]];
+                                       if ([self copyImage:imNames[fNamePrefix] to:@"test"
+                                                 withTarget:self.objectNames[i]]) {
+                                           [self.testingArray addObject:d];
+                                        }
                                     }
-
-                                } else {
+                               } else {
                                     NSLog(@"#### Image for prefix - %@ notFound. Skipping!", fNamePrefix);
                                 }
                             }
-
                         }
-
-
-
                     }
                 }
             }
         }
     }
+    // Final step - create annotations json file
+    [self writeAnnotations:self.learningArrray toDir:@"train"];
+    [self writeAnnotations:self.testingArray toDir:@"test"];
 }
 
 
-- (void) copyImage:(NSString *)fileName to:(NSString *)destDir withTarget:(NSString *)targetDir
+- (BOOL) copyImage:(NSString *)fileName to:(NSString *)destDir withTarget:(NSString *)targetDir
 {
     NSFileManager *fm = [NSFileManager defaultManager];
     NSError *error = nil;
     NSString *targetPath = [destDir stringByAppendingPathComponent:targetDir];
+    targetPath = [DESTPATH stringByAppendingPathComponent:targetPath];
     if ([fm fileExistsAtPath:targetPath] == NO) {
         [fm createDirectoryAtPath:targetPath withIntermediateDirectories:YES attributes:nil error:&error];
         if (error) {
             NSLog(@"!!! Cannot create destination path - %@ ==> %@", destDir,[error localizedDescription]);
+            return NO;
+        }
+    }
+    NSString *destFileName = [targetPath stringByAppendingPathComponent:fileName.lastPathComponent];
+    [fm copyItemAtPath:fileName toPath:destFileName error:&error];
+    if (error) {
+        NSLog(@"Cannot copy file %@ to %@ --> %@", fileName.lastPathComponent, targetDir,
+               [error localizedDescription]);
+        return NO;
+    }
+    return YES;
+}
+
+
+- (void) writeAnnotations:(NSArray *)array toDir:(NSString *)targetDir
+{
+    NSString *targetPath = [DESTPATH stringByAppendingPathComponent:targetDir];
+    targetPath = [targetPath stringByAppendingPathComponent:@"annotations.json"];
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSError *error = nil;
+    if ([fm fileExistsAtPath:targetPath]) {
+        [fm removeItemAtPath:targetPath error:&error];
+        if (error) {
+            NSLog(@"### Cannot remove old annotations.json! - %@", [error localizedDescription]);
             return;
         }
-        [fm copyItemAtPath:fileName toPath:targetPath error:&error];
-        if (error) {
-            NSLog(@"Cannot copy file %@ to %@", fileName.lastPathComponent, targetDir);
-        }
+    }
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:array
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:&error];
+    if (error) {
+        NSLog(@"### Error during json preparing - %@", [error localizedDescription]);
+        return;
+    }
+    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+    [jsonString writeToFile:targetPath atomically:NO encoding:NSUTF8StringEncoding error:&error];
+    if (error) {
+        NSLog(@"### Cannot write annotations.json file - %@", [error localizedDescription]);
     }
 
 }
 
-
 - (BOOL) decideArea:(uint32_t) amount
 {
-    double pip = arc4random_uniform(amount) * amount;
+    double pip = (double)arc4random_uniform(amount) / (double)amount;
     return (pip > LEARN_THRESHOLD);
 }
 
