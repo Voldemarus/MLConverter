@@ -7,20 +7,41 @@
 
 #import "AppDelegate.h"
 #import "SourceFilesExtractor.h"
+#import "Preferences.h"
 
-@interface AppDelegate ()
+@interface AppDelegate () <NSTableViewDelegate, NSTableViewDataSource>
+{
+    Preferences *prefs;
+}
+
+@property (nonatomic, retain) SourceFilesExtractor *processor;
 
 @property (strong) IBOutlet NSWindow *window;
 - (IBAction)saveAction:(id)sender;
+@property (weak) IBOutlet NSTableView *tableView;
+@property (weak) IBOutlet NSImageView *imageView;
+- (IBAction)QuitbuttonClicked:(id)sender;
+- (IBAction)modeClicked:(id)sender;
+@property (weak) IBOutlet NSSegmentedControl *modeControl;
+@property (weak) IBOutlet NSSwitch *generateSwitch;
+- (IBAction)generateSwitchClicked:(id)sender;
 
 @end
 
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    SourceFilesExtractor *processor = [[SourceFilesExtractor alloc] init];
-    [processor processFiles];
+    self.processor = [[SourceFilesExtractor alloc] init];
 
+    self.tableView.dataSource = self;
+    self.tableView.delegate = self;
+    prefs = [Preferences sharedPreferences];
+    self.generateSwitch.state = (prefs.generateOnStartup ? NSControlStateValueOn : NSControlStateValueOff);
+    self.modeControl.selectedSegment = prefs.offsetMode;
+
+    [self.processor processFiles];
+
+    [self.tableView reloadData];
 }
 
 
@@ -123,6 +144,158 @@
     }
 
     return NSTerminateNow;
+}
+
+
+#pragma mark - TableView delegate/datasource -
+
+- (NSInteger) numberOfRowsInTableView:(NSTableView *)tableView
+{
+    return self.processor.list.count;
+}
+
+- (nullable id)tableView:(NSTableView *)tableView objectValueForTableColumn:(nullable NSTableColumn *)tableColumn row:(NSInteger)row
+{
+    Entry *entry = self.processor.list[row];
+    NSString *identifier = tableColumn.identifier;
+    if ([identifier isEqualToString:@"FileName"]) {
+        return entry.fileName;
+    } else if ([identifier isEqualToString:@"Origin"]) {
+        // Calculate updated position
+        double newX = entry.x * entry.imageWidth;
+        double newY = entry.y * entry.imageHeight;
+        switch(prefs.offsetMode) {
+            case offsetModeTL: {
+                // This is native coordinate system in NSImage/UIImage
+                break;
+            }
+            case offsetModeBL:{
+                newY = entry.imageHeight - newY;
+                break;
+            }
+            case offsetModeBR:{
+                newY = entry.imageHeight - newY;
+                newX = entry.imageWidth - newX;
+                break;
+            }
+            case offsetModeTR:{
+                newX = entry.imageWidth - newX;
+                break;
+            }
+         }
+        int newXi = newX;
+        int newYi = newY;
+        return [NSString stringWithFormat:@"%4d*%4d", newXi,newYi];
+    } else if ([identifier isEqualToString:@"Size"]) {
+        int ww = entry.width * entry.imageWidth;
+        int wh = entry.height * entry.imageHeight;
+        return [NSString stringWithFormat:@"%2d*%2d", ww,wh];
+    }
+    return identifier;
+}
+
+- (void) tableViewSelectionDidChange:(NSNotification *)notification
+{
+    NSInteger selRow = self.tableView.selectedRow;
+    Entry *entry = self.processor.list[selRow];
+
+    NSImage *image = [[NSImage alloc] initWithContentsOfFile:entry.fullPath];
+    self.imageView.image = image;
+    [self updateImageOverlay];
+}
+
+
+#pragma mark - Image processing -
+
+- (void) updateImageOverlay
+{
+    NSInteger selected = self.tableView.selectedRow;
+    if (selected != NSNotFound) {
+        // We have selected row, so we can process it
+        Entry *entry = self.processor.list[selected];
+        // Calculate object' position
+        // Calculate updated position
+        double newX = entry.x * entry.imageWidth;
+        double newY = entry.y * entry.imageHeight;
+        switch(prefs.offsetMode) {
+            case offsetModeTL: {
+                // This is native coordinate system in NSImage/UIImage
+                break;
+            }
+            case offsetModeBL:{
+                newY = entry.imageHeight - newY;
+                break;
+            }
+            case offsetModeBR:{
+                newY = entry.imageHeight - newY;
+                newX = entry.imageWidth - newX;
+                break;
+            }
+            case offsetModeTR:{
+                newX = entry.imageWidth - newX;
+                break;
+            }
+        }
+        double ww = entry.width * entry.imageWidth;
+        double wh = entry.height * entry.imageHeight;
+        // Now we should raw/redraw box on the image
+        [self drawCrosshair:self.imageView.image];
+        CGRect bBox = CGRectMake(newX, newY, ww, wh);
+        [self drawBoundingBox:bBox];
+
+    }
+}
+
+- (void) drawBoundingBox:(CGRect) rect
+{
+    NSImage *image = self.imageView.image;
+    [image lockFocus];
+
+    NSBezierPath *path = [NSBezierPath bezierPathWithRect:rect];
+    path.lineWidth = 8;
+    [[NSColor redColor] set];
+    [path stroke];
+    [image unlockFocus];
+    self.imageView.image = image;
+}
+
+
+- (void)drawCrosshair:(NSImage*)img
+{
+    [img lockFocus];
+
+    NSBezierPath* path = [NSBezierPath bezierPath];
+
+    [path moveToPoint:CGPointMake(90,100)];
+    [path lineToPoint:CGPointMake(110,100)];
+
+    [path moveToPoint:CGPointMake(100,90)];
+    [path lineToPoint:CGPointMake(100,110)];
+
+    [[NSColor blackColor] set];
+    [path stroke];
+    [img unlockFocus];
+}
+
+#pragma mark - Controls actions -
+
+
+- (IBAction)modeClicked:(id)sender
+{
+    NSInteger newMode = self.modeControl.selectedSegment;
+    prefs.offsetMode = newMode;
+    [self.tableView reloadData];
+    [self updateImageOverlay];
+}
+
+- (IBAction)QuitbuttonClicked:(id)sender {
+    [[NSApplication sharedApplication] terminate:nil];
+}
+
+
+- (IBAction)generateSwitchClicked:(id)sender
+{
+    prefs.generateOnStartup = (self.generateSwitch.state == NSControlStateValueOn);
 }
 
 @end

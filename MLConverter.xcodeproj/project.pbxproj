@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B78EF3F27ABCA550024DC34 /* Preferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B78EF3E27ABCA550024DC34 /* Preferences.m */; };
 		1B92BEE327AA9C7C009A31BB /* SourceFilesExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B92BEE227AA9C7C009A31BB /* SourceFilesExtractor.m */; };
 		1BA4004027A9686500607DC8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BA4003F27A9686500607DC8 /* AppDelegate.m */; };
 		1BA4004327A9686500607DC8 /* MLConverter.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1BA4004127A9686500607DC8 /* MLConverter.xcdatamodeld */; };
@@ -35,6 +36,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1B78EF3D27ABCA550024DC34 /* Preferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Preferences.h; sourceTree = "<group>"; };
+		1B78EF3E27ABCA550024DC34 /* Preferences.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Preferences.m; sourceTree = "<group>"; };
 		1B92BEE027AA9C0D009A31BB /* FilePointer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePointer.h; sourceTree = "<group>"; };
 		1B92BEE127AA9C7C009A31BB /* SourceFilesExtractor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SourceFilesExtractor.h; sourceTree = "<group>"; };
 		1B92BEE227AA9C7C009A31BB /* SourceFilesExtractor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceFilesExtractor.m; sourceTree = "<group>"; };
@@ -103,6 +106,8 @@
 		1BA4003D27A9686500607DC8 /* MLConverter */ = {
 			isa = PBXGroup;
 			children = (
+				1B78EF3D27ABCA550024DC34 /* Preferences.h */,
+				1B78EF3E27ABCA550024DC34 /* Preferences.m */,
 				1BA4007127A9688400607DC8 /* SourceData */,
 				1BA4003E27A9686500607DC8 /* AppDelegate.h */,
 				1BA4003F27A9686500607DC8 /* AppDelegate.m */,
@@ -276,6 +281,7 @@
 				1B92BEE327AA9C7C009A31BB /* SourceFilesExtractor.m in Sources */,
 				1BA4004B27A9687800607DC8 /* main.m in Sources */,
 				1BA4004327A9686500607DC8 /* MLConverter.xcdatamodeld in Sources */,
+				1B78EF3F27ABCA550024DC34 /* Preferences.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
